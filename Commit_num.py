@@ -4,6 +4,7 @@ import time
 import requests
 from lxml import etree
 import json
+import pandas as pd
 
 BRANCH_URL = 'https://github.com/redis/redis/branches/all?page='
 GITHUB_URL = 'https://github.com'
@@ -26,12 +27,24 @@ def parseHTML(resp: str) -> dict:
 def getNum(num: str) -> int:
     return int(num.replace(",", ""))
 
-# TODO 获取仓库unstable分支的按月的提交数  返回字典
+# 获取仓库unstable分支的按月的提交数  返回字典
 # { year-month : num}  {2024-12:200 , 2024-11:100}
 def get_all_commit_num() -> dict:
     ret = request_branch_commit('unstable')
-    print(ret)
+    # 提取月份
+    # 将字典转换为 DataFrame
+    df = pd.DataFrame(list(ret.items()), columns=['date_str', 'value'])
 
+    # 解析日期字符串为 datetime 对象
+    df['date'] = pd.to_datetime(df['date_str'], format='%b %d, %Y')
+
+    # 提取月份
+    df['month'] = pd.to_datetime(df['date'].dt.strftime('%b %Y'))
+
+    # 按月份分组并对值求和
+    summed_df = df.groupby('month')['value'].sum().reset_index().sort_values(by='month')
+
+    return dict(zip(summed_df['month'].dt.strftime('%b %Y'), summed_df['value']))
 
 # 获取所有的提交数 最后一次提交时间
 # 返回Branch列表
@@ -99,7 +112,7 @@ def request_branch_commit(branch: str) -> dict:
         for data in datas:
             ret[data['title']] = len(data['commits'])
 
-        if i >= 10 or not json_data['payload']['filters']['pagination']['hasNextPage']:
+        if not json_data['payload']['filters']['pagination']['hasNextPage']:
             break
         print(base_num + pagination * i)
         i += 1
@@ -107,7 +120,8 @@ def request_branch_commit(branch: str) -> dict:
     return ret
 
 if __name__ == '__main__':
-    get_all_commit_num()
+    print(get_all_commit_num())
+
 
 
 
