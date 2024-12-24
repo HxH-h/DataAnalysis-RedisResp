@@ -17,7 +17,8 @@ token_lst = [
 
 ]
 
-# 随机选择一个令牌
+# 功能: 随机选择一个 GitHub API 令牌并返回带有认证信息的请求头（headers）。此函数允许绕过 GitHub API 请求的限制，因为 GitHub 对于每个 IP 地址的请求数量有限制，可以通过多个令牌进行轮换
+# 返回一个字典，其中包含用于 GitHub API 请求的请求头 Authorization 和 Accept
 def get_headers():
     access_token = random.choice(token_lst)
     return {
@@ -26,6 +27,11 @@ def get_headers():
     }
 
 # 获取仓库的所有 Issue，并按创建时间降序排序
+#功能: 获取指定页面的仓库 Issues。支持分页请求，最多每次返回 100 条 Issue
+# 参数:
+# page: 当前请求的页面编号，用于分页请求 GitHub API
+# 返回值:
+# 返回一个包含 Issues 的列表（字典格式），如果请求成功；如果请求失败，返回空列表
 def get_issues(page):
     # 修改 URL，采用新的格式
     url = f'https://api.github.com/repos/{repo_owner}/{repo_name}/issues?state=all&per_page=100&page={page}'
@@ -39,6 +45,11 @@ def get_issues(page):
         return []
 
 # 获取 Issue 的评论
+# 功能: 获取指定 Issue 的评论。一次最多请求 100 条评论
+# 参数:
+# issue_number: 需要获取评论的 Issue 的编号
+# 返回值:
+# 返回包含评论的列表，每个评论是一个字典。如果请求失败，返回空列表
 def get_comments(issue_number):
     url = f"{GITHUB_API_URL}/repos/{repo_owner}/{repo_name}/issues/{issue_number}/comments"
     params = {"page": 1, "per_page": 100}  # 获取最多 100 个评论
@@ -51,6 +62,9 @@ def get_comments(issue_number):
         print(f"Error fetching comments for issue {issue_number}: {response.status_code}")
         return []
 # 获取仓库的所有 Issues 和评论，只进行一次请求
+# 功能: 获取所有 Issue 及其评论。采用分页获取所有 Issue，并为每个 Issue 获取评论数据
+# 返回值:
+# 返回一个包含所有 Issue 和评论数据的列表，每个 Issue 都会包含相关的评论数据（通过 comments_data 键）
 def get_all_issues_and_comments():
     issues = []
     page = 1
