@@ -6,13 +6,13 @@ import requests
 from lxml import etree
 import json
 
-
+ACCESS_TOKEN = ''
 BRANCH_URL = 'https://github.com/redis/redis/branches/all?page='
 GITHUB_URL = 'https://github.com'
 COMMIT_URL = 'https://github.com/redis/redis/commits/'
 HEADERS = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.82',
-            "Authorization": f"Bearer "
+            "Authorization": f"Bearer {ACCESS_TOKEN}"
            }
 
 # 解析响应的HTML文件 将script下的json字符串转为字典
