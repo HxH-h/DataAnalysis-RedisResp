@@ -98,6 +98,11 @@ def get_all_issues_and_comments():
     return issues
 
 # 获取提问者的统计分析：统计每个人的提问数和参与讨论的问题数
+# 功能: 统计每个用户的提问数（ask_num）和参与讨论的次数（discuss_num）
+# 参数:
+# issues: 包含所有 Issue 的列表，每个 Issue 中包含评论数据
+# 返回值:
+# 返回一个字典列表，每个字典包含用户的名称（name）、提问数（ask_num）和讨论数（discuss_num）
 def get_contributor_count(issues):
     contributor_stats = defaultdict(lambda: {"ask_num": 0, "discuss_num": 0})
 
@@ -123,6 +128,11 @@ def get_contributor_count(issues):
     return contributor_count
 
 # 获取人之间的关系：分析用户之间的互动关系
+# 功能: 统计并返回用户之间的互动关系。每次互动（评论）会被记录为用户对之间的关系
+# 参数:
+# issues: 包含所有 Issue 和评论数据的列表
+# 返回值:
+# 返回一个字典列表，每个字典表示一对用户之间的互动关系，包含 source（源用户），target（目标用户），以及 num（互动次数）
 def get_relation(issues):
     relations = defaultdict(int)
 
