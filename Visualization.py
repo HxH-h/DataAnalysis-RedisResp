@@ -53,45 +53,9 @@ branch_bar = (
     )
 )
 
-#同时渲染多个图表
-(
-    Page(layout=Page.SimplePageLayout)
-        .add(
-        ustable_line,
-            branch_bar
-        )
-        .render("visualization.html")
-)
-
-
-# 获取所有 Issue 和评论数据（一次性请求）
-issues = get_all_issues_and_comments()
-
-# 获取提问者的统计数据
-contributor_data = get_contributor_count(issues)
-
-# 获取关系数据
-relation_data = get_relation(issues)
-# 获取前20名
-def get_top_users(data, key, top_n=20):
-    counter = Counter()
-    for entry in data:
-        name = entry['name']
-        num = int(entry[key])
-        counter[name] += num
-    return counter.most_common(top_n)
-
-ask_num_max = get_top_users(contributor_data , 'ask_num' )
-diss_num_max = get_top_users(contributor_data , 'discuss_num')
-
-def extract_unique_nodes(data):
-    nodes = set()
-    for entry in data:
-        nodes.add(entry['source'])
-        nodes.add(entry['target'])
-    result = [{'name': node} for node in nodes]
-    return result
-nodes = extract_unique_nodes(relation_data)
+# 获取issue的提问数和讨论数
+ask_num_max = get_ask_num_max()
+diss_num_max = get_discuss_num_max()
 
 
 def create_bar_chart(data, title, x_axis_label, y_axis_label):
@@ -105,21 +69,33 @@ def create_bar_chart(data, title, x_axis_label, y_axis_label):
         .add_yaxis("", values)
         .reversal_axis()
         .set_series_opts(
-            label_opts=opts.LabelOpts(
-                is_show=True,
-                position="right",
+        label_opts=opts.LabelOpts(
+            is_show=True,
+            position="right",
             )
         )
         .set_global_opts(
             title_opts=opts.TitleOpts(title=title),
-            xaxis_opts=opts.AxisOpts(name=x_axis_label, axislabel_opts={"interval": "0"}, ),
+            xaxis_opts=opts.AxisOpts(name=x_axis_label , axislabel_opts={"interval": "0"},),
             yaxis_opts=opts.AxisOpts(name=y_axis_label)
         )
     )
     return bar
 
+# 创建 ask_num 柱状图
+ask_bar = create_bar_chart(ask_num_max, "", "User", "ask_num")
 
-graph = (Graph(init_opts=opts.InitOpts(width="1500px", height='800px'))
+# 创建 discuss_num 柱状图
+discuss_bar = create_bar_chart(diss_num_max, "", "User", "discuss_num")
+
+grid = Grid(init_opts=opts.InitOpts(width="1600px", height="800px"))
+grid.add(ask_bar, grid_opts=opts.GridOpts(pos_left="5%", pos_right="60%"))
+grid.add(discuss_bar, grid_opts=opts.GridOpts(pos_left="60%", pos_right="5%"))
+
+# 获取节点
+nodes = extract_unique_nodes()
+
+graph = (Graph(init_opts=opts.InitOpts(width="1600px", height='1000px'))
          .add(
     "",
     nodes,
@@ -133,26 +109,36 @@ graph = (Graph(init_opts=opts.InitOpts(width="1500px", height='800px'))
     title_opts=opts.TitleOpts(title="issue关系图"),
 
 ).render('relation.html')
+
          )
 
-# 创建 ask_num 柱状图
-ask_bar = create_bar_chart(ask_num_max, "", "User", "ask_num")
 
-# 创建 discuss_num 柱状图
-discuss_bar = create_bar_chart(diss_num_max, "", "User", "discuss_num")
 
-grid = Grid(init_opts=opts.InitOpts(width="1600px", height="800px"))
-grid.add(ask_bar, grid_opts=opts.GridOpts(pos_left="5%", pos_right="60%"))
-grid.add(discuss_bar, grid_opts=opts.GridOpts(pos_left="60%", pos_right="5%"))
-# 使用 Page 包含 Grid
-page = Page()
-page.add(grid)
 
-# 渲染图表
-page.render("issue.html")
 
-webbrowser.open("issue.html")
-webbrowser.open("relation.html")
+
+
+
+
+
+
+
+
+#同时渲染多个图表
+(
+    Page(layout=Page.SimplePageLayout)
+        .add(
+        ustable_line,
+            branch_bar,
+            grid
+        )
+        .render("visualization.html")
+)
+
+
+
+
 
 # 自动打开渲染好的html文件
 webbrowser.open("visualization.html")
+webbrowser.open("relation.html")

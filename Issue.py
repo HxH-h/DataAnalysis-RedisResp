@@ -1,7 +1,7 @@
 
 import requests
 import random
-from collections import defaultdict
+from collections import defaultdict , Counter
 import re
 
 # GitHub API 基础 URL
@@ -170,6 +170,30 @@ contributor_data = get_contributor_count(issues)
 
 # 获取关系数据
 relation_data = get_relation(issues)
+
+# 预处理数据
+def get_top_users(data, key, top_n):
+    counter = Counter()
+    for entry in data:
+        name = entry['name']
+        num = int(entry[key])
+        counter[name] += num
+    return counter.most_common(top_n)
+
+def get_ask_num_max(top = 20):
+    return get_top_users(contributor_data, 'ask_num' , top)
+def get_discuss_num_max(top = 20):
+    return get_top_users(contributor_data, 'discuss_num' , top)
+
+def extract_unique_nodes():
+    nodes = set()
+    for entry in relation_data:
+        nodes.add(entry['source'])
+        nodes.add(entry['target'])
+    result = [{'name': node} for node in nodes]
+    return result
+
+
 
 # 将数据输出到指定路径
 file_path = r"C:\Users\lenovo\Desktop\开源软件基础\data.txt"  # 使用原始字符串来处理路径
