@@ -34,8 +34,8 @@ def getNum(num: str) -> int:
 
 # 获取仓库unstable分支的按月的提交数  返回字典
 # { year-month : num}  {2024-12:200 , 2024-11:100}
-def get_all_commit_num() -> dict:
-    commit = request_branch_commit('unstable')
+def get_all_commit_num(data) -> dict:
+    commit = data
     # 使用map和reduce统计按月的提交数
     def map_data(item):
         date_str = item['date']
@@ -56,12 +56,12 @@ def get_all_commit_num() -> dict:
 
 # 获取所有的提交数 最后一次提交时间
 # 返回字典列表
-def get_branch_commit_num() -> list:
-    branch = request_branch_commit_num()
+def get_branch_commit_num(data) -> list:
+    branch = data
     def map_data(item):
         ret = {
             'name': item['name'],
-            'num': item['commit_num'],
+            'value': item['commit_num'],
             'authoredDate': datetime.strptime(item['authoredDate'], '%Y-%m-%dT%H:%M:%S.%f%z').strftime('%Y-%m-%d')
         }
         return ret
