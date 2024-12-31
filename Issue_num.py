@@ -5,8 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 from collections import Counter
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+
 
 # GitHub Token 列表
 TOKENS = [
@@ -120,7 +119,7 @@ def save_content_to_file(issue_id, body_content, comments_content):
     """
 
     # 创建文件路径
-    md_file_path = f'D:\\AAAcode\\redis\\content\\issues_{issue_id}.md'
+    md_file_path = f'./content/issues_{issue_id}.md'
 
     with open(md_file_path, mode='w', encoding='utf-8') as file:
         # 写入正文和评论内容
@@ -134,12 +133,12 @@ def spider():
     """
     主爬虫函数，负责从 GitHub 获取 issue 数据并保存到本地 CSV 和 Markdown 文件。
     """
-    result_path = r'D:\AAAcode\redis'
+    result_path = r'./content'
     if not os.path.exists(result_path):
         os.makedirs(result_path)
 
     # 定义 CSV 文件路径
-    csv_file_path = r'D:\AAAcode\redis\issues.csv'
+    csv_file_path = r'./issues.csv'
 
     # 写入 CSV 文件的表头
     with open(csv_file_path, mode='w', newline='', encoding='utf-8') as f:
@@ -187,12 +186,9 @@ def spider():
     print('The end!')
 
 
+# 获取每月问题的提交数和解决数。
+# 返回格式：[{'date': 'year-month', 'commit_num': , 'solve_num'}]
 def get_issue_num(df) -> list:
-    """
-    获取每月问题的提交数和解决数。
-    返回格式：[{'date': 'year-month', 'commit_num': , 'solve_num'}]
-    """
-
     # 创建年月字段
     df['Created YearMonth'] = df['Created At'].dt.to_period('M')
     df['Closed YearMonth'] = df['Closed At'].dt.to_period('M')
@@ -221,11 +217,9 @@ def get_issue_num(df) -> list:
 
 
 
+# 获取问题提交到解决的间隔,返回两个参数:最短的5个和最长的5个
+# 返回格式：[{'date': 'year-month' , 'issue_name':  ,'interval': }]
 def get_issue_interval(df) -> (list, list):
-    """
-    获取问题提交到解决的间隔,返回两个参数:最短的5个和最长的5个
-    返回格式：[{'date': 'year-month' , 'issue_name':  ,'interval': }]
-    """
     # 计算从提交到解决的时间间隔，保持以秒为单位
     df['Time to Resolve (seconds)'] = (df['Closed At'] - df['Created At']).dt.total_seconds()
 
@@ -266,7 +260,6 @@ def load_stopwords(file_path='stopwords.txt'):
     """
     从文件加载停用词列表
     """
-
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             stopwords = set(word.strip() for word in file.readlines())
@@ -277,11 +270,10 @@ def load_stopwords(file_path='stopwords.txt'):
 
 
 
+
+# 获取问题提交到解决的间隔,返回两个参数:最短的5个和最长的5个
+# 返回格式：[{'date': 'year-month' , 'issue_name':  ,'interval': }]
 def get_issue_keyword(content_folder='content', stopwords_file='stopwords.txt', freq_threshold=10000) -> list:
-    """
-    获取问题关键词
-    返回格式：{'keyword': 'some_keyword', 'num': 123}]
-    """
     # 加载停用词
     stopwords = load_stopwords(stopwords_file)
     all_words = []
@@ -311,40 +303,18 @@ def get_issue_keyword(content_folder='content', stopwords_file='stopwords.txt', 
     word_count = Counter(all_words)
 
     # 将结果转换为字典列表格式
-    result = [{'keyword': word, 'num': count} for word, count in word_count.items()]
+    result = [(keyword, num) for keyword, num in word_count.items()]
 
     # 过滤掉频次过高的词
-    filtered_result = [item for item in result if item['num'] <= freq_threshold]
+    filtered_result = [item for item in result if item[1] <= freq_threshold]
 
     # 按照词频（num）从高到低排序
-    filtered_result = sorted(filtered_result, key=lambda x: x['num'], reverse=True)
+    filtered_result = sorted(filtered_result, key=lambda x: x[1], reverse=True)
 
     return filtered_result
 
 
-
-def wordcloud(data):
-    """
-    生成词云图，并展示
-    """
-    # 将字典列表转换为频率字典
-    freq_dict = {item['keyword']: item['num'] for item in data}
-
-    # 创建词云对象
-    wordcloud = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(freq_dict)
-
-    # 绘制词云图
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation="bilinear")
-    plt.axis('off')  # 不显示坐标轴
-    plt.show()
-
-
-if __name__ == '__main__':
-    """
-    示例主函数，包括爬虫、数据加载、关键词提取、词云图生成等步骤
-    """
-    spider()
+def get_result():
     # 读取 CSV 文件
     df = pd.read_csv('issues.csv')
 
@@ -353,32 +323,14 @@ if __name__ == '__main__':
     df['Created At'] = pd.to_datetime(df['Created At'], errors='coerce', utc=True)
     df['Closed At'] = pd.to_datetime(df['Closed At'], errors='coerce', utc=True)
 
-    # 获取问题关键词
-    issue_keywords = get_issue_keyword(content_folder=r'D:\AAAcode\redis\content', stopwords_file='stopwords.txt')
+    return df
 
-    wordcloud(issue_keywords)
-    # 打印词频统计结果
-    print("问题关键词及词频：")
-    for record in issue_keywords[:20]:  # 只显示前20个高频词
-        print(f"关键词: {record['keyword']}, 频次: {record['num']}")
 
-    # 获取每月问题的提交数和解决数
-    issue_num = get_issue_num(df)
-    print("每月问题的提交数和解决数：")
-    for record in issue_num:
-        print(f"日期: {record['date']}, 提交数: {record['commit_num']}, 解决数: {record['solve_num']}")
 
-    # 获取问题提交到解决的最短和最长时间
-    shortest_5, longest_5 = get_issue_interval(df)
 
-    print("\n提交到解决的最短和最长时间：")
-    print("最短时间：")
-    for record in shortest_5:
-        print(f"日期: {record['date']}, 问题名: {record['issue_name']}, 间隔时间: {record['interval']}秒")
 
-    print("\n最长时间：")
-    for record in longest_5:
-        print(f"日期: {record['date']}, 问题名: {record['issue_name']}, 间隔时间: {record['interval']}天")
+
+
 
 
 
