@@ -85,15 +85,6 @@ def get_issue_content(comments_url):
     return '\n'.join(issue_content) or 'none'  # 如果没有正文内容，则返回 'none'
 
 
-# 定义匹配符合格式的 issue URL
-def is_valid_issue_url(url):
-    """
-        验证给定的 URL 是否是有效的 GitHub issue URL。
-        """
-    pattern = r'https://github.com/redis/redis/issues/\d+'
-    return re.match(pattern, url) is not None
-
-
 def escape_for_csv(text):
     """
     对文本进行转义，确保能够正确存储到 CSV 文件中。处理逗号、换行符、双引号等特殊字符。
